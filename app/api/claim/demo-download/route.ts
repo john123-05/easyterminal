@@ -43,16 +43,16 @@ export async function GET(request: Request) {
       cache: "no-store",
     });
 
-    if (!upstream.ok || !upstream.body) {
+    if (!upstream.ok) {
       return NextResponse.json(
         { error: "Bilddatei konnte nicht geladen werden." },
         { status: 502 },
       );
     }
 
+    const payload = await upstream.arrayBuffer();
     const headers = new Headers();
     const contentType = upstream.headers.get("content-type") ?? "application/octet-stream";
-    const contentLength = upstream.headers.get("content-length");
     const fileName = sanitizeFileName(`${photo.resolvedClaimCode || photo.id}.jpg`);
 
     headers.set("Content-Type", contentType);
@@ -61,12 +61,9 @@ export async function GET(request: Request) {
       `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
     );
     headers.set("Cache-Control", "private, no-store, max-age=0");
+    headers.set("Content-Length", String(payload.byteLength));
 
-    if (contentLength) {
-      headers.set("Content-Length", contentLength);
-    }
-
-    return new NextResponse(upstream.body, {
+    return new NextResponse(payload, {
       status: 200,
       headers,
     });

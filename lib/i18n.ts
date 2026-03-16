@@ -2,7 +2,7 @@ export const SUPPORTED_LOCALES = ["de", "en", "es", "it", "fr", "nl"] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
-export const DEFAULT_LOCALE: Locale = "de";
+export const DEFAULT_LOCALE: Locale = "en";
 
 export const LOCALE_TAGS: Record<Locale, string> = {
   de: "de-DE",

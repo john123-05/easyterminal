@@ -155,17 +155,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       type: contentType,
     });
 
-    return { blob, file, fileName };
-  }
-
-  function triggerDirectDownload(url: string) {
-    const link = document.createElement("a");
-    link.href = url;
-    link.rel = "noopener";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    return { file };
   }
 
   const handleDownload = async () => {
@@ -177,28 +167,13 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      const { blob, file, fileName } = await loadDownloadAsset();
-
-      if (canShareFiles(file)) {
-        await navigator.share({
-          title: formatLocaleString(locale, "save_image"),
-          text: formatLocaleString(locale, "share_native_text"),
-          files: [file],
-        });
-        setDownloadMessage(formatLocaleString(locale, "share_sheet_opened"));
-        return;
-      }
-
       if (order?.downloadHref) {
-        triggerDirectDownload(order.downloadHref);
+        window.location.assign(order.downloadHref);
         setDownloadMessage(formatLocaleString(locale, "download_started"));
         return;
       }
 
-      const objectUrl = URL.createObjectURL(blob);
-      triggerDirectDownload(objectUrl);
-      setDownloadMessage(formatLocaleString(locale, "opened_new_tab"));
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      throw new Error(formatLocaleString(locale, "download_failed"));
     } catch (error) {
       setDownloadMessage(
         error instanceof Error ? error.message : formatLocaleString(locale, "download_failed"),

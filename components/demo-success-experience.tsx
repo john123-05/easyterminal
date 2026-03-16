@@ -65,17 +65,7 @@ export function DemoSuccessExperience({
       type: contentType,
     });
 
-    return { blob, file, fileName };
-  }
-
-  function triggerDirectDownload(url: string) {
-    const link = document.createElement("a");
-    link.href = url;
-    link.rel = "noopener";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    return { file };
   }
 
   const handleDownload = async () => {
@@ -83,19 +73,7 @@ export function DemoSuccessExperience({
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      const { blob, file, fileName } = await loadDownloadAsset();
-
-      if (canShareFiles(file)) {
-        await navigator.share({
-          title: formatLocaleString(locale, "save_image"),
-          text: formatLocaleString(locale, "share_native_text"),
-          files: [file],
-        });
-        setDownloadMessage(formatLocaleString(locale, "share_sheet_opened"));
-        return;
-      }
-
-      triggerDirectDownload(downloadUrl);
+      window.location.assign(downloadUrl);
       setDownloadMessage(formatLocaleString(locale, "download_started"));
     } catch (error) {
       setDownloadMessage(

@@ -82,12 +82,15 @@ export function GalleryScreen({
             </h2>
             <div className="mt-5 space-y-3 text-sm leading-7 text-ink-soft sm:text-base">
               <p>
-                Diese Demo zeigt nur den grossen Bildschirm mit den durchlaufenden Bildern und dem
-                Erklaerungs-Popup.
+                Fuer den Zahlungstest nutze bitte die Demo-Karte
+                <span className="font-semibold text-ink"> 4242 4242 4242 4242</span>.
               </p>
               <p>
-                Wenn heute keine Bilder vorhanden sind, werden automatisch die Bilder vom zuletzt
-                verfuegbaren Tag angezeigt.
+                Ablaufdatum:
+                <span className="font-semibold text-ink"> 12/27</span>
+                {" "}CVC:
+                <span className="font-semibold text-ink"> 123</span>
+                {" "}Name beliebig.
               </p>
             </div>
 
@@ -100,10 +103,10 @@ export function GalleryScreen({
                 Weiter zur Demo
               </button>
               <Link
-                href="/claim"
+                href="/"
                 className="inline-flex w-full items-center justify-center border border-line bg-white px-5 py-4 text-sm font-semibold text-ink transition hover:border-ink"
               >
-                QR-Ziel ansehen
+                Zurueck zur Hauptseite
               </Link>
             </div>
           </div>
@@ -112,4 +115,3 @@ export function GalleryScreen({
     </main>
   );
 }
-

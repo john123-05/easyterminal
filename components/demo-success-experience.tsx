@@ -1,15 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatLocaleString, type Locale } from "@/lib/i18n";
 
 type DemoSuccessExperienceProps = {
+  locale: Locale;
   photoUrl: string;
   claimCode: string;
 };
-
-function buildShareText() {
-  return "Ich habe gerade mein Bild gesichert.";
-}
 
 function canShareFiles(file: File) {
   return Boolean(
@@ -20,6 +18,7 @@ function canShareFiles(file: File) {
 }
 
 export function DemoSuccessExperience({
+  locale,
   photoUrl,
   claimCode,
 }: DemoSuccessExperienceProps) {
@@ -49,7 +48,7 @@ export function DemoSuccessExperience({
         serverError = payload.error ?? null;
       }
 
-      throw new Error(serverError || "Das Bild konnte nicht geladen werden.");
+      throw new Error(serverError || formatLocaleString(locale, "download_failed"));
     }
 
     const blob = await response.blob();
@@ -65,11 +64,7 @@ export function DemoSuccessExperience({
       type: contentType,
     });
 
-    return {
-      blob,
-      file,
-      fileName,
-    };
+    return { blob, file, fileName };
   }
 
   const handleDownload = async () => {
@@ -81,11 +76,11 @@ export function DemoSuccessExperience({
 
       if (canShareFiles(file)) {
         await navigator.share({
-          title: "Bild speichern",
-          text: "Du kannst das Bild jetzt teilen oder in Fotos sichern.",
+          title: formatLocaleString(locale, "save_image"),
+          text: formatLocaleString(locale, "share_native_text"),
           files: [file],
         });
-        setDownloadMessage("Teilen oder in Fotos sichern geöffnet.");
+        setDownloadMessage(formatLocaleString(locale, "share_sheet_opened"));
         return;
       }
 
@@ -103,9 +98,9 @@ export function DemoSuccessExperience({
 
       if (!supportsDownloadAttribute) {
         window.open(objectUrl, "_blank", "noopener,noreferrer");
-        setDownloadMessage("Bild im neuen Tab geöffnet.");
+        setDownloadMessage(formatLocaleString(locale, "opened_new_tab"));
       } else {
-        setDownloadMessage("Download gestartet.");
+        setDownloadMessage(formatLocaleString(locale, "download_started"));
       }
 
       setTimeout(() => {
@@ -113,7 +108,7 @@ export function DemoSuccessExperience({
       }, 1500);
     } catch (error) {
       setDownloadMessage(
-        error instanceof Error ? error.message : "Download konnte nicht gestartet werden.",
+        error instanceof Error ? error.message : formatLocaleString(locale, "download_failed"),
       );
     } finally {
       setIsDownloading(false);
@@ -131,10 +126,10 @@ export function DemoSuccessExperience({
 
       const { file } = await loadDownloadAsset();
 
-      if (navigator.share && "canShare" in navigator && navigator.canShare({ files: [file] })) {
+      if (canShareFiles(file)) {
         await navigator.share({
-          title: "Meine Erinnerung",
-          text: buildShareText(),
+          title: formatLocaleString(locale, "share_title"),
+          text: formatLocaleString(locale, "share_native_text"),
           files: [file],
         });
         setShareMessage(null);
@@ -143,8 +138,8 @@ export function DemoSuccessExperience({
 
       if (navigator.share) {
         await navigator.share({
-          title: "Meine Erinnerung",
-          text: buildShareText(),
+          title: formatLocaleString(locale, "share_title"),
+          text: formatLocaleString(locale, "share_native_text"),
           url: shareUrl,
         });
         setShareMessage(null);
@@ -153,14 +148,14 @@ export function DemoSuccessExperience({
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
-        setShareMessage("Link kopiert.");
+        setShareMessage(formatLocaleString(locale, "share_copied"));
         return;
       }
 
-      setShareMessage("Teilen ist auf diesem Gerät gerade nicht verfügbar.");
+      setShareMessage(formatLocaleString(locale, "share_not_available"));
     } catch (error) {
       setShareMessage(
-        error instanceof Error ? error.message : "Teilen wurde abgebrochen.",
+        error instanceof Error ? error.message : formatLocaleString(locale, "share_cancelled"),
       );
     } finally {
       setIsSharing(false);
@@ -172,25 +167,25 @@ export function DemoSuccessExperience({
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md flex-col justify-between">
         <section className="overflow-hidden border border-line bg-white">
           <div className="relative aspect-[4/5] overflow-hidden bg-[#f4f2ee]">
-            <img
-              src={photoUrl}
-              alt="Freigeschaltetes Bild"
-              className="h-full w-full object-contain"
-            />
+            <img src={photoUrl} alt="Unlocked image" className="h-full w-full object-contain" />
           </div>
         </section>
 
         <section className="mt-5 border border-line bg-white p-5 sm:p-6">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Demo Erfolg</p>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent">
+            {formatLocaleString(locale, "demo_success_label")}
+          </p>
           <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-            Dein Bild ist jetzt freigeschaltet.
+            {formatLocaleString(locale, "demo_success_title")}
           </h1>
           <p className="mt-4 text-sm leading-7 text-ink-soft">
-            Die Demo-Zahlung war erfolgreich. Du kannst das Bild jetzt speichern oder direkt teilen.
+            {formatLocaleString(locale, "demo_success_body")}
           </p>
 
           <div className="mt-6 border border-line bg-page px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">Claim Code</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">
+              {formatLocaleString(locale, "claim_code_dash")}
+            </p>
             <p className="mt-2 break-all text-sm font-medium text-ink">{claimCode}</p>
           </div>
 
@@ -203,7 +198,9 @@ export function DemoSuccessExperience({
               disabled={isDownloading}
               className="inline-flex w-full items-center justify-center bg-ink px-5 py-4 text-sm font-semibold text-white transition hover:bg-ink/90"
             >
-              {isDownloading ? "Speichern wird vorbereitet..." : "Bild speichern"}
+              {isDownloading
+                ? formatLocaleString(locale, "save_preparing")
+                : formatLocaleString(locale, "save_image")}
             </button>
 
             <button
@@ -214,7 +211,9 @@ export function DemoSuccessExperience({
               disabled={isSharing}
               className="inline-flex w-full items-center justify-center border border-line bg-white px-5 py-4 text-sm font-semibold text-ink transition hover:border-ink"
             >
-              {isSharing ? "Teilen wird vorbereitet..." : "Bild teilen"}
+              {isSharing
+                ? formatLocaleString(locale, "share_preparing")
+                : formatLocaleString(locale, "share_image")}
             </button>
           </div>
 

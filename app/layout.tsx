@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
+import { formatLocaleString, getLocaleFromAcceptLanguage } from "@/lib/i18n";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
@@ -15,22 +17,26 @@ function resolveMetadataBase(value?: string) {
   }
 }
 
-export const metadata: Metadata = {
-  metadataBase: resolveMetadataBase(siteUrl),
-  title: "EasyTerminal Demo",
-  description:
-    "Eigenstaendige Demo fuer den EasyTerminal-Bildschirm mit durchlaufenden Bildern, QR-Codes und Intro-Popup.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getLocaleFromAcceptLanguage((await headers()).get("accept-language"));
 
-export default function RootLayout({
+  return {
+    metadataBase: resolveMetadataBase(siteUrl),
+    title: formatLocaleString(locale, "app_title"),
+    description: formatLocaleString(locale, "app_description"),
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = getLocaleFromAcceptLanguage((await headers()).get("accept-language"));
+
   return (
-    <html lang="de">
+    <html lang={locale}>
       <body>{children}</body>
     </html>
   );
 }
-

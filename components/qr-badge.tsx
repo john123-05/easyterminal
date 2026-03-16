@@ -1,16 +1,18 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
+import { formatLocaleString, type Locale } from "@/lib/i18n";
 import { buildClaimUrl, shortClaimCode } from "@/lib/qr";
 import type { GalleryPhoto } from "@/types/photo";
 
 type QrBadgeProps = {
+  locale: Locale;
   photo: GalleryPhoto;
 };
 
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || null;
 
-export function QrBadge({ photo }: QrBadgeProps) {
+export function QrBadge({ locale, photo }: QrBadgeProps) {
   const browserOrigin =
     typeof window !== "undefined" && window.location.origin ? window.location.origin : null;
 
@@ -24,9 +26,11 @@ export function QrBadge({ photo }: QrBadgeProps) {
       <div>
         <div className="h-px w-8 bg-accent sm:w-10" />
         <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
-          Scan dein
+          {formatLocaleString(locale, "qr_scan_your")}
         </p>
-        <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-ink-soft">Bild</p>
+        <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
+          {formatLocaleString(locale, "qr_image")}
+        </p>
       </div>
 
       <div className="flex items-end py-3 sm:py-4">

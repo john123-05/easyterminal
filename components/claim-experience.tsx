@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatLocaleString, LOCALE_TAGS, type Locale } from "@/lib/i18n";
 import type { GalleryPhoto } from "@/types/photo";
 
 type ClaimExperienceProps = {
+  locale: Locale;
   photo: GalleryPhoto;
   checkoutMode?: "stripe" | "demo";
 };
@@ -13,11 +15,11 @@ type FormState = {
   email: string;
 };
 
-function formatPrice(photo: GalleryPhoto) {
+function formatPrice(photo: GalleryPhoto, locale: Locale) {
   const amount = typeof photo.price_cents === "number" ? photo.price_cents : 300;
   const currency = typeof photo.currency === "string" && photo.currency ? photo.currency : "eur";
 
-  return new Intl.NumberFormat("de-DE", {
+  return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(amount / 100);
@@ -38,6 +40,7 @@ function buildDemoCheckoutUrl(code: string, fullName: string, email: string) {
 }
 
 export function ClaimExperience({
+  locale,
   photo,
   checkoutMode = "stripe",
 }: ClaimExperienceProps) {
@@ -51,7 +54,7 @@ export function ClaimExperience({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const priceLabel = useMemo(() => formatPrice(photo), [photo]);
+  const priceLabel = useMemo(() => formatPrice(photo, locale), [locale, photo]);
 
   useEffect(() => {
     setIsClientReady(true);
@@ -61,13 +64,13 @@ export function ClaimExperience({
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
 
     if (!formState.fullName.trim()) {
-      nextErrors.fullName = "Bitte gib deinen Namen ein.";
+      nextErrors.fullName = formatLocaleString(locale, "claim_name_required");
     }
 
     if (!formState.email.trim()) {
-      nextErrors.email = "Bitte gib deine E-Mail ein.";
+      nextErrors.email = formatLocaleString(locale, "claim_email_required");
     } else if (!isValidEmail(formState.email)) {
-      nextErrors.email = "Bitte gib eine gültige E-Mail ein.";
+      nextErrors.email = formatLocaleString(locale, "claim_email_invalid");
     }
 
     setErrors(nextErrors);
@@ -106,13 +109,13 @@ export function ClaimExperience({
         : null;
 
       if (!response.ok || !payload?.url) {
-        throw new Error(payload?.error || "Checkout konnte nicht gestartet werden.");
+        throw new Error(payload?.error || formatLocaleString(locale, "checkout_start_failed"));
       }
 
       window.location.assign(payload.url);
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : "Checkout konnte nicht gestartet werden.",
+        error instanceof Error ? error.message : formatLocaleString(locale, "checkout_start_failed"),
       );
       setIsSubmitting(false);
     }
@@ -125,13 +128,13 @@ export function ClaimExperience({
           <div className="relative aspect-[4/5] overflow-hidden bg-[#f4f2ee]">
             <img
               src={photo.resolvedImageUrl}
-              alt="Foto-Vorschau"
+              alt="Photo preview"
               className="absolute inset-0 h-full w-full scale-105 object-cover blur-2xl opacity-55"
             />
             <div className="absolute inset-0 bg-white/30" />
             <div className="absolute inset-x-5 top-5 flex items-center justify-between">
-            <div className="border border-white/80 bg-white/82 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft backdrop-blur">
-                Deine Erinnerung
+              <div className="border border-white/80 bg-white/82 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft backdrop-blur">
+                {formatLocaleString(locale, "claim_memory")}
               </div>
               <div className="border border-white/80 bg-white/82 px-3 py-2 text-sm font-semibold text-ink backdrop-blur">
                 {priceLabel}
@@ -141,7 +144,7 @@ export function ClaimExperience({
             <div className="absolute inset-x-5 bottom-5 overflow-hidden border border-white/75 bg-white/76 p-3 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur-md">
               <img
                 src={photo.resolvedImageUrl}
-                alt="Verwischte Foto-Vorschau"
+                alt="Photo preview"
                 className="h-[16.5rem] w-full object-contain blur-[4px] sm:h-[18rem]"
               />
             </div>
@@ -151,9 +154,11 @@ export function ClaimExperience({
         <section className="mt-5 border border-line bg-white p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Dein Bild</p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-accent">
+                {formatLocaleString(locale, "claim_your_image")}
+              </p>
               <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-                Sichere dir deine Erinnerung.
+                {formatLocaleString(locale, "claim_title")}
               </h1>
             </div>
 
@@ -164,8 +169,8 @@ export function ClaimExperience({
 
           <p className="mt-4 text-sm leading-7 text-ink-soft">
             {checkoutMode === "demo"
-              ? "Öffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und gehe danach direkt in die Demo-Zahlungsmaske."
-              : "Öffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und wechsle danach direkt in den sicheren Checkout."}
+              ? formatLocaleString(locale, "claim_demo_body")
+              : formatLocaleString(locale, "claim_stripe_body")}
           </p>
 
           {!showForm ? (
@@ -174,7 +179,7 @@ export function ClaimExperience({
               onClick={() => setShowForm(true)}
               className="mt-6 inline-flex w-full items-center justify-center bg-ink px-5 py-4 text-sm font-semibold text-white transition hover:bg-ink/90"
             >
-              Erinnerung sichern
+              {formatLocaleString(locale, "claim_primary_button")}
             </button>
           ) : null}
 
@@ -182,7 +187,7 @@ export function ClaimExperience({
             <div className="mt-6 space-y-4">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-ink" htmlFor="fullName">
-                  Name
+                  {formatLocaleString(locale, "claim_name")}
                 </label>
                 <input
                   id="fullName"
@@ -201,16 +206,14 @@ export function ClaimExperience({
                     }
                   }}
                   className="w-full border border-line bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-ink"
-                  placeholder="Vorname Nachname"
+                  placeholder={formatLocaleString(locale, "claim_name_placeholder")}
                 />
-                {errors.fullName ? (
-                  <p className="text-sm text-[#c2410c]">{errors.fullName}</p>
-                ) : null}
+                {errors.fullName ? <p className="text-sm text-[#c2410c]">{errors.fullName}</p> : null}
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-ink" htmlFor="email">
-                  E-Mail
+                  {formatLocaleString(locale, "claim_email")}
                 </label>
                 <input
                   id="email"
@@ -229,7 +232,7 @@ export function ClaimExperience({
                     }
                   }}
                   className="w-full border border-line bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-ink"
-                  placeholder="dein.name@email.com"
+                  placeholder={formatLocaleString(locale, "claim_email_placeholder")}
                 />
                 {errors.email ? <p className="text-sm text-[#c2410c]">{errors.email}</p> : null}
               </div>
@@ -247,25 +250,27 @@ export function ClaimExperience({
                 }`}
               >
                 {!isClientReady
-                  ? "Checkout wird geladen..."
+                  ? formatLocaleString(locale, "claim_checkout_loading")
                   : isSubmitting
-                    ? "Checkout wird vorbereitet..."
+                    ? formatLocaleString(locale, "claim_checkout_preparing")
                     : checkoutMode === "demo"
-                      ? "Weiter zur Demo-Zahlung"
-                      : "Weiter zum Checkout"}
+                      ? formatLocaleString(locale, "claim_checkout_demo_button")
+                      : formatLocaleString(locale, "claim_checkout_button")}
               </button>
 
               <p className="text-xs leading-6 text-ink-soft">
                 {checkoutMode === "demo"
-                  ? "Demo-Zahlung aktiv. Die Präsentation läuft additiv über eine eigene Claim-Strecke und verändert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."
-                  : "Der Checkout läuft additiv über eine eigene Claim-Strecke und verändert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."}
+                  ? formatLocaleString(locale, "claim_demo_note")
+                  : formatLocaleString(locale, "claim_checkout_note")}
               </p>
             </div>
           ) : null}
 
           {submitError ? (
             <div className="mt-5 border border-[#fed7aa] bg-[#fff7ed] p-4">
-              <p className="text-sm font-semibold text-[#9a3412]">Checkout konnte nicht starten.</p>
+              <p className="text-sm font-semibold text-[#9a3412]">
+                {formatLocaleString(locale, "checkout_start_failed")}
+              </p>
               <p className="mt-2 text-sm leading-6 text-[#9a3412]">{submitError}</p>
             </div>
           ) : null}

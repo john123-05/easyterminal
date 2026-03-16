@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatLocaleString, LOCALE_TAGS, type Locale } from "@/lib/i18n";
 
 type DemoCheckoutExperienceProps = {
+  locale: Locale;
   photoUrl: string;
   claimCode: string;
   defaultName: string;
@@ -18,8 +20,8 @@ type DemoPaymentFormState = {
   cvc: string;
 };
 
-function formatPrice(priceCents: number, currency: string) {
-  return new Intl.NumberFormat("de-DE", {
+function formatPrice(priceCents: number, currency: string, locale: Locale) {
+  return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(priceCents / 100);
@@ -32,11 +34,9 @@ function normalizeCardNumber(value: string) {
 
 function normalizeExpiry(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
-
   if (digits.length <= 2) {
     return digits;
   }
-
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }
 
@@ -45,6 +45,7 @@ function normalizeCvc(value: string) {
 }
 
 export function DemoCheckoutExperience({
+  locale,
   photoUrl,
   claimCode,
   defaultName,
@@ -61,7 +62,10 @@ export function DemoCheckoutExperience({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const priceLabel = useMemo(() => formatPrice(priceCents, currency), [currency, priceCents]);
+  const priceLabel = useMemo(
+    () => formatPrice(priceCents, currency, locale),
+    [currency, locale, priceCents],
+  );
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -72,7 +76,7 @@ export function DemoCheckoutExperience({
       !formState.expiry.trim() ||
       !formState.cvc.trim()
     ) {
-      setSubmitError("Bitte fülle alle Kartenfelder für die Demo aus.");
+      setSubmitError(formatLocaleString(locale, "demo_fill_payment_fields"));
       return;
     }
 
@@ -94,7 +98,7 @@ export function DemoCheckoutExperience({
           <div className="relative aspect-[4/5] overflow-hidden bg-[#f4f2ee]">
             <img
               src={photoUrl}
-              alt="Bildvorschau"
+              alt="Photo preview"
               className="absolute inset-0 h-full w-full scale-105 object-cover blur-2xl opacity-55"
             />
             <div className="absolute inset-0 bg-white/35" />
@@ -111,7 +115,7 @@ export function DemoCheckoutExperience({
             <div className="absolute inset-x-5 bottom-5 overflow-hidden border border-white/75 bg-white/78 p-3 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur-md">
               <img
                 src={photoUrl}
-                alt="Foto-Vorschau"
+                alt="Photo preview"
                 className="h-[16.5rem] w-full object-contain blur-[1.5px] sm:h-[18rem]"
               />
             </div>
@@ -121,9 +125,11 @@ export function DemoCheckoutExperience({
         <section className="mt-5 border border-line bg-white p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Zahlung</p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-accent">
+                {formatLocaleString(locale, "payment_label")}
+              </p>
               <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-                Demo-Kauf abschließen.
+                {formatLocaleString(locale, "demo_checkout_title")}
               </h1>
             </div>
 
@@ -133,14 +139,13 @@ export function DemoCheckoutExperience({
           </div>
 
           <p className="mt-4 text-sm leading-7 text-ink-soft">
-            Diese Zahlungsmaske ist nur für die Vorführung. Beliebige Kartendaten funktionieren,
-            es wird nichts belastet und das Bild wird danach direkt freigeschaltet.
+            {formatLocaleString(locale, "demo_checkout_body")}
           </p>
 
           <div className="mt-6 grid gap-4">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-ink" htmlFor="cardholderName">
-                Name auf der Karte
+                {formatLocaleString(locale, "card_name")}
               </label>
               <input
                 id="cardholderName"
@@ -153,13 +158,13 @@ export function DemoCheckoutExperience({
                   }))
                 }
                 className="w-full border border-line bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-ink"
-                placeholder="Max Mustermann"
+                placeholder={formatLocaleString(locale, "card_name_placeholder")}
               />
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-ink" htmlFor="cardNumber">
-                Kartennummer
+                {formatLocaleString(locale, "card_number")}
               </label>
               <input
                 id="cardNumber"
@@ -180,7 +185,7 @@ export function DemoCheckoutExperience({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-ink" htmlFor="expiry">
-                  Ablaufdatum
+                  {formatLocaleString(locale, "expiry")}
                 </label>
                 <input
                   id="expiry"
@@ -200,7 +205,7 @@ export function DemoCheckoutExperience({
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-ink" htmlFor="cvc">
-                  CVC
+                  {formatLocaleString(locale, "cvc")}
                 </label>
                 <input
                   id="cvc"
@@ -220,7 +225,9 @@ export function DemoCheckoutExperience({
             </div>
 
             <div className="border border-line bg-page px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">Claim-Code</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">
+                {formatLocaleString(locale, "claim_code_dash")}
+              </p>
               <p className="mt-2 break-all text-sm font-medium text-ink">{claimCode}</p>
             </div>
 
@@ -236,17 +243,21 @@ export function DemoCheckoutExperience({
                   : "bg-ink text-white transition hover:bg-ink/90"
               }`}
             >
-              {isSubmitting ? "Zahlung wird verarbeitet..." : `Jetzt kaufen ${priceLabel}`}
+              {isSubmitting
+                ? formatLocaleString(locale, "demo_processing")
+                : formatLocaleString(locale, "demo_buy_button", { price: priceLabel })}
             </button>
 
             <p className="text-xs leading-6 text-ink-soft">
-              Demo-Modus aktiv. Jede eingegebene Karte führt direkt zur Freischaltung des Bildes.
+              {formatLocaleString(locale, "demo_mode_note")}
             </p>
           </div>
 
           {submitError ? (
             <div className="mt-5 border border-[#fed7aa] bg-[#fff7ed] p-4">
-              <p className="text-sm font-semibold text-[#9a3412]">Demo-Zahlung fehlgeschlagen.</p>
+              <p className="text-sm font-semibold text-[#9a3412]">
+                {formatLocaleString(locale, "demo_payment_failed")}
+              </p>
               <p className="mt-2 text-sm leading-6 text-[#9a3412]">{submitError}</p>
             </div>
           ) : null}

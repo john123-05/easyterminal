@@ -1,19 +1,21 @@
 import { GalleryScreen } from "@/components/gallery-screen";
 import { getGalleryConfig } from "@/lib/gallery-config";
+import { formatLocaleString, getLocaleFromAcceptLanguage } from "@/lib/i18n";
 import { getLatestGalleryPhotos } from "@/lib/photos";
+import { headers } from "next/headers";
 import type { GalleryPhoto } from "@/types/photo";
 
 export const dynamic = "force-dynamic";
 
 export default async function DemoPage() {
+  const locale = getLocaleFromAcceptLanguage((await headers()).get("accept-language"));
   const config = getGalleryConfig();
   let photos: GalleryPhoto[] = [];
   let skippedCount = 0;
   let error: string | undefined;
 
   if (!config.isSupabaseConfigured) {
-    error =
-      "Die Supabase-Umgebungsvariablen fehlen noch. Hinterlege `NEXT_PUBLIC_SUPABASE_URL` und `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` oder in den Projekt-Settings von Bolt/Vercel.";
+    error = formatLocaleString(locale, "gallery_missing_supabase");
   } else {
     try {
       const result = await getLatestGalleryPhotos(config);
@@ -23,9 +25,9 @@ export default async function DemoPage() {
       error =
         caughtError instanceof Error
           ? caughtError.message
-          : "Die Galerie konnte nicht aus Supabase geladen werden.";
+          : formatLocaleString(locale, "gallery_load_error");
     }
   }
 
-  return <GalleryScreen photos={photos} skippedCount={skippedCount} error={error} />;
+  return <GalleryScreen locale={locale} photos={photos} skippedCount={skippedCount} error={error} />;
 }

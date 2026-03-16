@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatLocaleString, type Locale } from "@/lib/i18n";
 import type { ClaimOrderApiResponse } from "@/types/claim";
 
 type ClaimSuccessExperienceProps = {
+  locale: Locale;
   sessionId?: string;
   orderId?: string;
   token?: string;
@@ -13,10 +15,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "error"; message: string }
   | { kind: "ready"; payload: ClaimOrderApiResponse };
-
-function buildShareText() {
-  return "Ich habe gerade mein Bild gesichert.";
-}
 
 function canShareFiles(file: File) {
   return Boolean(
@@ -39,6 +37,7 @@ function buildOrderUrl(props: ClaimSuccessExperienceProps) {
 }
 
 export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
+  const { locale } = props;
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
@@ -78,7 +77,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
             kind: "error",
             message: payload && typeof payload === "object" && "error" in payload && payload.error
               ? payload.error
-              : "Freischaltung konnte nicht geladen werden.",
+              : formatLocaleString(locale, "success_load_failed_body"),
           });
           return;
         }
@@ -100,7 +99,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
     return () => {
       cancelled = true;
     };
-  }, [orderUrl]);
+  }, [locale, orderUrl]);
 
   if (!orderUrl) {
     return (
@@ -108,10 +107,10 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
           <div className="w-full border border-line bg-white p-6 sm:p-7">
             <h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink">
-              Freischaltung konnte nicht geladen werden.
+              {formatLocaleString(locale, "success_load_failed_body")}
             </h1>
             <p className="mt-4 text-sm leading-7 text-ink-soft">
-              Die Success-Seite hat keine gueltigen Parameter erhalten.
+              {formatLocaleString(locale, "success_missing_body")}
             </p>
           </div>
         </div>
@@ -121,7 +120,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
   async function loadDownloadAsset() {
     if (!order?.downloadHref) {
-      throw new Error("Das Bild steht noch nicht zum Download bereit.");
+      throw new Error(formatLocaleString(locale, "download_not_ready"));
     }
 
     const response = await fetch(order.downloadHref, {
@@ -138,7 +137,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         serverError = payload.error ?? null;
       }
 
-      throw new Error(serverError || "Das Bild konnte nicht geladen werden.");
+      throw new Error(serverError || formatLocaleString(locale, "download_failed"));
     }
 
     const blob = await response.blob();
@@ -155,11 +154,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       type: contentType,
     });
 
-    return {
-      blob,
-      file,
-      fileName,
-    };
+    return { blob, file, fileName };
   }
 
   const handleDownload = async () => {
@@ -175,11 +170,11 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       if (canShareFiles(file)) {
         await navigator.share({
-          title: "Bild speichern",
-          text: "Du kannst das Bild jetzt teilen oder in Fotos sichern.",
+          title: formatLocaleString(locale, "save_image"),
+          text: formatLocaleString(locale, "share_native_text"),
           files: [file],
         });
-        setDownloadMessage("Teilen oder in Fotos sichern geöffnet.");
+        setDownloadMessage(formatLocaleString(locale, "share_sheet_opened"));
         return;
       }
 
@@ -197,9 +192,9 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       if (!supportsDownloadAttribute) {
         window.open(objectUrl, "_blank", "noopener,noreferrer");
-        setDownloadMessage("Bild im neuen Tab geöffnet.");
+        setDownloadMessage(formatLocaleString(locale, "opened_new_tab"));
       } else {
-        setDownloadMessage("Download gestartet.");
+        setDownloadMessage(formatLocaleString(locale, "download_started"));
       }
 
       setTimeout(() => {
@@ -207,7 +202,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       }, 1500);
     } catch (error) {
       setDownloadMessage(
-        error instanceof Error ? error.message : "Download konnte nicht gestartet werden.",
+        error instanceof Error ? error.message : formatLocaleString(locale, "download_failed"),
       );
     } finally {
       setIsDownloading(false);
@@ -225,10 +220,10 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       const { file } = await loadDownloadAsset();
 
-      if (navigator.share && "canShare" in navigator && navigator.canShare({ files: [file] })) {
+      if (canShareFiles(file)) {
         await navigator.share({
-          title: "Meine Erinnerung",
-          text: buildShareText(),
+          title: formatLocaleString(locale, "share_title"),
+          text: formatLocaleString(locale, "share_native_text"),
           files: [file],
         });
         setShareMessage(null);
@@ -237,8 +232,8 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       if (navigator.share && shareUrl) {
         await navigator.share({
-          title: "Meine Erinnerung",
-          text: buildShareText(),
+          title: formatLocaleString(locale, "share_title"),
+          text: formatLocaleString(locale, "share_native_text"),
           url: shareUrl,
         });
         setShareMessage(null);
@@ -247,14 +242,14 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       if (shareUrl && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
-        setShareMessage("Link kopiert.");
+        setShareMessage(formatLocaleString(locale, "share_copied"));
         return;
       }
 
-      setShareMessage("Teilen ist auf diesem Gerät gerade nicht verfügbar.");
+      setShareMessage(formatLocaleString(locale, "share_not_available"));
     } catch (error) {
       setShareMessage(
-        error instanceof Error ? error.message : "Teilen wurde abgebrochen.",
+        error instanceof Error ? error.message : formatLocaleString(locale, "share_cancelled"),
       );
     } finally {
       setIsSharing(false);
@@ -267,7 +262,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
           <div className="w-full border border-line bg-white p-6 sm:p-7">
             <h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink">
-              Die Zahlung ist durch, aber die Freischaltung fehlt noch.
+              {formatLocaleString(locale, "success_load_failed_title")}
             </h1>
             <p className="mt-4 text-sm leading-7 text-ink-soft">{state.message}</p>
           </div>
@@ -284,7 +279,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
             {order ? (
               <img
                 src={order.photo.resolvedImageUrl}
-                alt="Freigeschaltetes Bild"
+                alt="Unlocked image"
                 className={`h-full w-full object-contain transition duration-500 ${
                   isPaid ? "blur-0" : "blur-md"
                 }`}
@@ -298,12 +293,14 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         <section className="mt-5 border border-line bg-white p-5 sm:p-6">
           <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Checkout</p>
           <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-            {isPaid ? "Dein Bild ist jetzt verfügbar." : "Freischaltung wird geprüft."}
+            {isPaid
+              ? formatLocaleString(locale, "success_ready_title")
+              : formatLocaleString(locale, "success_pending_title")}
           </h1>
           <p className="mt-4 text-sm leading-7 text-ink-soft">
             {isPaid
-              ? "Du kannst dein Bild jetzt speichern oder direkt mit Freunden teilen."
-              : "Die Zahlung wird verarbeitet. Wir schalten dein Bild direkt danach frei."}
+              ? formatLocaleString(locale, "success_ready_body")
+              : formatLocaleString(locale, "success_pending_body")}
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -319,7 +316,9 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
                   : "pointer-events-none border border-line bg-page text-ink-soft"
               }`}
             >
-              {isDownloading ? "Speichern wird vorbereitet..." : "Bild speichern"}
+              {isDownloading
+                ? formatLocaleString(locale, "save_preparing")
+                : formatLocaleString(locale, "save_image")}
             </button>
 
             <button
@@ -332,7 +331,9 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
                   : "pointer-events-none border-line bg-page text-ink-soft"
               }`}
             >
-              {isSharing ? "Teilen wird vorbereitet..." : "Bild teilen"}
+              {isSharing
+                ? formatLocaleString(locale, "share_preparing")
+                : formatLocaleString(locale, "share_image")}
             </button>
           </div>
 

@@ -5,6 +5,7 @@ import {
 } from "@/lib/claim-orders";
 import { isMockCheckoutEnabled } from "@/lib/checkout-mode";
 import { getClaimPhotoById } from "@/lib/claim";
+import { formatLocaleString, getLocaleFromAcceptLanguage } from "@/lib/i18n";
 import { getStripeServerClient } from "@/lib/stripe";
 import type { ClaimCheckoutPayload } from "@/types/claim";
 
@@ -49,6 +50,8 @@ function readPayload(payload: unknown): ClaimCheckoutPayload | null {
 }
 
 export async function POST(request: Request) {
+  const locale = getLocaleFromAcceptLanguage(request.headers.get("accept-language"));
+
   try {
     const payload = readPayload(await request.json());
 
@@ -57,17 +60,17 @@ export async function POST(request: Request) {
     }
 
     if (!payload.fullName.trim()) {
-      return NextResponse.json({ error: "Bitte gib deinen Namen ein." }, { status: 400 });
+      return NextResponse.json({ error: formatLocaleString(locale, "claim_name_required") }, { status: 400 });
     }
 
     if (!payload.email.trim() || !isValidEmail(payload.email.trim())) {
-      return NextResponse.json({ error: "Bitte gib eine gueltige E-Mail ein." }, { status: 400 });
+      return NextResponse.json({ error: formatLocaleString(locale, "claim_email_invalid") }, { status: 400 });
     }
 
     const photo = await getClaimPhotoById(payload.photoId);
 
     if (!photo || photo.resolvedClaimCode !== payload.claimCode.trim()) {
-      return NextResponse.json({ error: "Das Bild konnte nicht geladen werden." }, { status: 404 });
+      return NextResponse.json({ error: formatLocaleString(locale, "download_failed") }, { status: 404 });
     }
 
     const siteUrl = getSiteUrl(request);
@@ -134,7 +137,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Checkout konnte nicht gestartet werden.",
+            : formatLocaleString(locale, "checkout_start_failed"),
       },
       { status: 500 },
     );

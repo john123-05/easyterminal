@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClaimOrderByAccess, markClaimOrderPaid } from "@/lib/claim-orders";
 import { isMockCheckoutEnabled } from "@/lib/checkout-mode";
+import { formatLocaleString, getLocaleFromAcceptLanguage } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 
@@ -53,9 +54,10 @@ function readPayload(payload: unknown): DemoPayPayload | null {
 
 export async function POST(request: Request) {
   try {
+    const locale = getLocaleFromAcceptLanguage(request.headers.get("accept-language"));
     if (!isMockCheckoutEnabled()) {
       return NextResponse.json(
-        { error: "Demo-Checkout ist nicht aktiviert." },
+        { error: formatLocaleString(locale, "demo_checkout_disabled_title") },
         { status: 403 },
       );
     }
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
       !payload.cvc.trim()
     ) {
       return NextResponse.json(
-        { error: "Bitte fuelle alle Zahlungsfelder aus." },
+        { error: formatLocaleString(locale, "demo_fill_payment_fields") },
         { status: 400 },
       );
     }

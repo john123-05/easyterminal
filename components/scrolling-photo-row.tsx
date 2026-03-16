@@ -1,20 +1,23 @@
 import type { CSSProperties } from "react";
 import { PhotoCard } from "@/components/photo-card";
+import type { Locale } from "@/lib/i18n";
 import type { GalleryPhoto } from "@/types/photo";
 
 type ScrollingPhotoRowProps = {
+  locale: Locale;
   photos: GalleryPhoto[];
   direction?: "left" | "right";
 };
 
 export function ScrollingPhotoRow({
+  locale,
   photos,
   direction = "left",
 }: ScrollingPhotoRowProps) {
   if (photos.length === 1) {
     return (
       <div className="flex justify-center py-2 sm:py-4">
-        <PhotoCard photo={photos[0]} eager />
+        <PhotoCard locale={locale} photo={photos[0]} eager />
       </div>
     );
   }
@@ -30,17 +33,16 @@ export function ScrollingPhotoRow({
       <div className="gallery-track flex w-max" style={animationStyle}>
         <div className="flex gap-6 pl-0.5 pr-6 sm:gap-8 sm:pl-1 sm:pr-8 lg:pl-2">
           {photos.map((photo, index) => (
-            <PhotoCard key={photo.id} photo={photo} eager={index < 2} />
+            <PhotoCard key={photo.id} locale={locale} photo={photo} eager={index < 2} />
           ))}
         </div>
 
         <div className="flex gap-6 pr-6 sm:gap-8 sm:pr-8" aria-hidden="true">
           {photos.map((photo) => (
-            <PhotoCard key={`${photo.id}-duplicate`} photo={photo} />
+            <PhotoCard key={`${photo.id}-duplicate`} locale={locale} photo={photo} />
           ))}
         </div>
       </div>
     </div>
   );
 }
-

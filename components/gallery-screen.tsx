@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { ScrollingPhotoRow } from "@/components/scrolling-photo-row";
+import { formatLocaleString, type Locale } from "@/lib/i18n";
 import type { GalleryPhoto } from "@/types/photo";
 
 type GalleryScreenProps = {
+  locale: Locale;
   photos?: GalleryPhoto[];
   skippedCount?: number;
   error?: string;
@@ -22,6 +24,7 @@ function renderStateCard(title: string, body: string) {
 }
 
 export function GalleryScreen({
+  locale,
   photos = [],
   skippedCount = 0,
   error,
@@ -31,13 +34,13 @@ export function GalleryScreen({
   const topRowPhotos = photos.filter((_, index) => index % 2 === 0);
   const bottomRowPhotos = photos.filter((_, index) => index % 2 === 1);
   const stateCard = error
-    ? renderStateCard("Die Galerie konnte nicht geladen werden.", error)
+    ? renderStateCard(formatLocaleString(locale, "gallery_load_failed"), error)
     : !hasPhotos
       ? renderStateCard(
-          "Keine Bilder gefunden.",
+          formatLocaleString(locale, "gallery_no_images"),
           skippedCount > 0
-            ? `${skippedCount} Einträge wurden geladen, hatten aber keine auflösbare Bild-URL. Prüfe image_url, thumbnail_url oder storage_path.`
-            : "Aktuell liefert die Tabelle photos keine Bilder für diese Abfrage.",
+            ? formatLocaleString(locale, "gallery_skipped_images", { count: skippedCount })
+            : formatLocaleString(locale, "gallery_no_images_query"),
         )
       : null;
 
@@ -53,15 +56,16 @@ export function GalleryScreen({
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white via-white/92 to-transparent sm:w-16" />
               <header className="px-5 pb-3 pt-4 text-center sm:px-8 sm:pb-4 sm:pt-5">
                 <h1 className="font-sans text-xl font-semibold tracking-[-0.02em] text-ink sm:text-2xl lg:text-3xl">
-                  Scanne den QR-Code und öffne dein Bild auf dem Handy
+                  {formatLocaleString(locale, "gallery_headline")}
                 </h1>
               </header>
               <div className="grid min-h-0 flex-1 grid-rows-2 gap-1 sm:gap-2">
                 <div className="flex min-h-0 items-center">
-                  <ScrollingPhotoRow photos={topRowPhotos} direction="left" />
+                  <ScrollingPhotoRow locale={locale} photos={topRowPhotos} direction="left" />
                 </div>
                 <div className="flex min-h-0 items-center">
                   <ScrollingPhotoRow
+                    locale={locale}
                     photos={bottomRowPhotos.length > 0 ? bottomRowPhotos : topRowPhotos}
                     direction="right"
                   />
@@ -75,22 +79,13 @@ export function GalleryScreen({
       {showIntroModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111111]/55 px-4 py-6 backdrop-blur-sm">
           <div className="w-full max-w-xl border border-line bg-white p-6 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.45)] sm:p-8">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Demo Hinweis</p>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-accent">{formatLocaleString(locale, "intro_hint")}</p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">
-              Scanne mit QR-Code, wie der Parkbesucher.
+              {formatLocaleString(locale, "intro_title")}
             </h2>
             <div className="mt-5 space-y-3 text-sm leading-7 text-ink-soft sm:text-base">
-              <p>
-                Für den Zahlungstest nutze bitte die Demo-Karte
-                <span className="font-semibold text-ink"> 4242 4242 4242 4242</span>.
-              </p>
-              <p>
-                Ablaufdatum:
-                <span className="font-semibold text-ink"> 12/27</span>
-                {" "}CVC:
-                <span className="font-semibold text-ink"> 123</span>
-                {" "}Name beliebig.
-              </p>
+              <p>{formatLocaleString(locale, "intro_card_hint")}</p>
+              <p>{formatLocaleString(locale, "intro_card_details")}</p>
             </div>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -99,7 +94,7 @@ export function GalleryScreen({
                 onClick={() => setShowIntroModal(false)}
                 className="inline-flex w-full items-center justify-center bg-ink px-5 py-4 text-sm font-semibold text-white transition hover:bg-ink/90"
               >
-                Weiter
+                {formatLocaleString(locale, "intro_continue")}
               </button>
             </div>
           </div>

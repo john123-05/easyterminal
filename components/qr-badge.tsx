@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { buildClaimUrl, shortClaimCode } from "@/lib/qr";
 import type { GalleryPhoto } from "@/types/photo";
@@ -10,20 +9,15 @@ type QrBadgeProps = {
 };
 
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || null;
-const subscribe = () => () => {};
 
 export function QrBadge({ photo }: QrBadgeProps) {
-  const browserOrigin = useSyncExternalStore(
-    subscribe,
-    () => configuredSiteUrl ?? window.location.origin,
-    () => configuredSiteUrl,
-  );
+  const browserOrigin =
+    typeof window !== "undefined" && window.location.origin ? window.location.origin : null;
+
   const qrValue = buildClaimUrl(photo.resolvedClaimCode, {
     siteUrl: configuredSiteUrl,
     browserOrigin,
   });
-
-  const qrReady = qrValue.startsWith("http://") || qrValue.startsWith("https://");
 
   return (
     <div className="grid h-full grid-rows-[auto_1fr_auto] border-l border-line pl-3 sm:pl-4">
@@ -37,7 +31,7 @@ export function QrBadge({ photo }: QrBadgeProps) {
 
       <div className="flex items-end py-3 sm:py-4">
         <div className="w-full overflow-hidden border border-line bg-white p-1.5 sm:p-2">
-          {qrReady ? (
+          {qrValue ? (
             <QRCodeSVG
               value={qrValue}
               size={88}
@@ -58,4 +52,3 @@ export function QrBadge({ photo }: QrBadgeProps) {
     </div>
   );
 }
-

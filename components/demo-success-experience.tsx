@@ -26,6 +26,7 @@ export function DemoSuccessExperience({
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [showShareLinks, setShowShareLinks] = useState(false);
 
   const shareUrl = useMemo(() => photoUrl, [photoUrl]);
   const downloadUrl = useMemo(
@@ -67,6 +68,16 @@ export function DemoSuccessExperience({
     return { blob, file, fileName };
   }
 
+  function triggerDirectDownload(url: string) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.rel = "noopener";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
@@ -84,28 +95,8 @@ export function DemoSuccessExperience({
         return;
       }
 
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const supportsDownloadAttribute = typeof link.download === "string";
-
-      link.href = objectUrl;
-      link.download = fileName;
-      link.rel = "noopener";
-      link.target = supportsDownloadAttribute ? "_self" : "_blank";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      if (!supportsDownloadAttribute) {
-        window.open(objectUrl, "_blank", "noopener,noreferrer");
-        setDownloadMessage(formatLocaleString(locale, "opened_new_tab"));
-      } else {
-        setDownloadMessage(formatLocaleString(locale, "download_started"));
-      }
-
-      setTimeout(() => {
-        URL.revokeObjectURL(objectUrl);
-      }, 1500);
+      triggerDirectDownload(downloadUrl);
+      setDownloadMessage(formatLocaleString(locale, "download_started"));
     } catch (error) {
       setDownloadMessage(
         error instanceof Error ? error.message : formatLocaleString(locale, "download_failed"),
@@ -123,18 +114,7 @@ export function DemoSuccessExperience({
     try {
       setIsSharing(true);
       setShareMessage(null);
-
-      const { file } = await loadDownloadAsset();
-
-      if (canShareFiles(file)) {
-        await navigator.share({
-          title: formatLocaleString(locale, "share_title"),
-          text: formatLocaleString(locale, "share_native_text"),
-          files: [file],
-        });
-        setShareMessage(null);
-        return;
-      }
+      setShowShareLinks(false);
 
       if (navigator.share) {
         await navigator.share({
@@ -146,13 +126,7 @@ export function DemoSuccessExperience({
         return;
       }
 
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-        setShareMessage(formatLocaleString(locale, "share_copied"));
-        return;
-      }
-
-      setShareMessage(formatLocaleString(locale, "share_not_available"));
+      setShowShareLinks(true);
     } catch (error) {
       setShareMessage(
         error instanceof Error ? error.message : formatLocaleString(locale, "share_cancelled"),
@@ -161,6 +135,12 @@ export function DemoSuccessExperience({
       setIsSharing(false);
     }
   };
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareUrl)}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  const xUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`;
+  const instagramUrl = "https://www.instagram.com/";
+  const tiktokUrl = "https://www.tiktok.com/";
 
   return (
     <main className="min-h-screen bg-page px-4 py-6 text-ink sm:px-6">
@@ -219,6 +199,63 @@ export function DemoSuccessExperience({
 
           {downloadMessage ? <p className="mt-4 text-sm text-ink-soft">{downloadMessage}</p> : null}
           {shareMessage ? <p className="mt-4 text-sm text-ink-soft">{shareMessage}</p> : null}
+
+          {showShareLinks ? (
+            <div className="mt-5 grid gap-2 border border-line bg-page p-4">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
+              >
+                WhatsApp
+              </a>
+              <a
+                href={facebookUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
+              >
+                Facebook
+              </a>
+              <a
+                href={xUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
+              >
+                X
+              </a>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!navigator.clipboard?.writeText) {
+                    return;
+                  }
+                  await navigator.clipboard.writeText(shareUrl);
+                  setShareMessage(`Instagram: ${formatLocaleString(locale, "share_copied")}`);
+                  window.open(instagramUrl, "_blank", "noopener,noreferrer");
+                }}
+                className="inline-flex items-center justify-center border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
+              >
+                Instagram
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!navigator.clipboard?.writeText) {
+                    return;
+                  }
+                  await navigator.clipboard.writeText(shareUrl);
+                  setShareMessage(`TikTok: ${formatLocaleString(locale, "share_copied")}`);
+                  window.open(tiktokUrl, "_blank", "noopener,noreferrer");
+                }}
+                className="inline-flex items-center justify-center border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
+              >
+                TikTok
+              </button>
+            </div>
+          ) : null}
         </section>
       </div>
     </main>

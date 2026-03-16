@@ -16,14 +16,6 @@ type LoadState =
   | { kind: "error"; message: string }
   | { kind: "ready"; payload: ClaimOrderApiResponse };
 
-function canShareFiles(file: File) {
-  return Boolean(
-    "canShare" in navigator &&
-      typeof navigator.canShare === "function" &&
-      navigator.canShare({ files: [file] }),
-  );
-}
-
 function buildOrderUrl(props: ClaimSuccessExperienceProps) {
   if (props.sessionId) {
     return `/api/claim/order?session_id=${encodeURIComponent(props.sessionId)}`;
@@ -119,45 +111,6 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
     );
   }
 
-  async function loadDownloadAsset() {
-    if (!order?.downloadHref) {
-      throw new Error(formatLocaleString(locale, "download_not_ready"));
-    }
-
-    const response = await fetch(order.downloadHref, {
-      cache: "no-store",
-    });
-
-    let serverError: string | null = null;
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type") ?? "";
-
-      if (contentType.includes("application/json")) {
-        const payload = (await response.json()) as { error?: string };
-        serverError = payload.error ?? null;
-      }
-
-      throw new Error(serverError || formatLocaleString(locale, "download_failed"));
-    }
-
-    const blob = await response.blob();
-    const contentType = response.headers.get("content-type") ?? blob.type ?? "image/jpeg";
-    const disposition = response.headers.get("content-disposition") ?? "";
-    const fileNameMatch =
-      disposition.match(/filename\*=UTF-8''([^;]+)/i) ??
-      disposition.match(/filename=\"?([^\";]+)\"?/i);
-    const fileName = fileNameMatch?.[1]
-      ? decodeURIComponent(fileNameMatch[1])
-      : `${order.photo.resolvedClaimCode}.jpg`;
-
-    const file = new File([blob], fileName, {
-      type: contentType,
-    });
-
-    return { file };
-  }
-
   const handleDownload = async () => {
     if (!isPaid) {
       return;
@@ -167,8 +120,8 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      if (order?.downloadHref) {
-        window.location.assign(order.downloadHref);
+      if (order?.photo.resolvedImageUrl) {
+        window.location.assign(order.photo.resolvedImageUrl);
         setDownloadMessage(formatLocaleString(locale, "download_started"));
         return;
       }

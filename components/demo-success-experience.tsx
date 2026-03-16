@@ -9,14 +9,6 @@ type DemoSuccessExperienceProps = {
   claimCode: string;
 };
 
-function canShareFiles(file: File) {
-  return Boolean(
-    "canShare" in navigator &&
-      typeof navigator.canShare === "function" &&
-      navigator.canShare({ files: [file] }),
-  );
-}
-
 export function DemoSuccessExperience({
   locale,
   photoUrl,
@@ -29,51 +21,13 @@ export function DemoSuccessExperience({
   const [showShareLinks, setShowShareLinks] = useState(false);
 
   const shareUrl = useMemo(() => photoUrl, [photoUrl]);
-  const downloadUrl = useMemo(
-    () => `/api/claim/demo-download?code=${encodeURIComponent(claimCode)}`,
-    [claimCode],
-  );
-
-  async function loadDownloadAsset() {
-    const response = await fetch(downloadUrl, {
-      cache: "no-store",
-    });
-
-    let serverError: string | null = null;
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type") ?? "";
-
-      if (contentType.includes("application/json")) {
-        const payload = (await response.json()) as { error?: string };
-        serverError = payload.error ?? null;
-      }
-
-      throw new Error(serverError || formatLocaleString(locale, "download_failed"));
-    }
-
-    const blob = await response.blob();
-    const contentType = response.headers.get("content-type") ?? blob.type ?? "image/jpeg";
-    const disposition = response.headers.get("content-disposition") ?? "";
-    const fileNameMatch =
-      disposition.match(/filename\*=UTF-8''([^;]+)/i) ??
-      disposition.match(/filename=\"?([^\";]+)\"?/i);
-    const fileName = fileNameMatch?.[1]
-      ? decodeURIComponent(fileNameMatch[1])
-      : `${claimCode || "liftpictures-demo"}.jpg`;
-    const file = new File([blob], fileName, {
-      type: contentType,
-    });
-
-    return { file };
-  }
 
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      window.location.assign(downloadUrl);
+      window.location.assign(photoUrl);
       setDownloadMessage(formatLocaleString(locale, "download_started"));
     } catch (error) {
       setDownloadMessage(

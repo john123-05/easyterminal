@@ -9,6 +9,14 @@ function sanitizeFileName(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]+/g, "-");
 }
 
+function toAbsoluteUpstreamUrl(value: string, requestUrl: string) {
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return new URL(value, requestUrl).toString();
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -31,7 +39,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Download ist nicht verfügbar." }, { status: 404 });
     }
 
-    const upstream = await fetch(downloadUrl, {
+    const upstream = await fetch(toAbsoluteUpstreamUrl(downloadUrl, request.url), {
       cache: "no-store",
     });
 

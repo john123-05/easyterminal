@@ -67,7 +67,7 @@ export function ClaimExperience({
     if (!formState.email.trim()) {
       nextErrors.email = "Bitte gib deine E-Mail ein.";
     } else if (!isValidEmail(formState.email)) {
-      nextErrors.email = "Bitte gib eine gueltige E-Mail ein.";
+      nextErrors.email = "Bitte gib eine gültige E-Mail ein.";
     }
 
     setErrors(nextErrors);
@@ -130,7 +130,7 @@ export function ClaimExperience({
             />
             <div className="absolute inset-0 bg-white/30" />
             <div className="absolute inset-x-5 top-5 flex items-center justify-between">
-              <div className="border border-white/80 bg-white/82 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft backdrop-blur">
+            <div className="border border-white/80 bg-white/82 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft backdrop-blur">
                 Deine Erinnerung
               </div>
               <div className="border border-white/80 bg-white/82 px-3 py-2 text-sm font-semibold text-ink backdrop-blur">
@@ -141,7 +141,7 @@ export function ClaimExperience({
             <div className="absolute inset-x-5 bottom-5 overflow-hidden border border-white/75 bg-white/76 p-3 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur-md">
               <img
                 src={photo.resolvedImageUrl}
-                alt="Geblurrte Foto-Vorschau"
+                alt="Verwischte Foto-Vorschau"
                 className="h-[16.5rem] w-full object-contain blur-[4px] sm:h-[18rem]"
               />
             </div>
@@ -164,8 +164,8 @@ export function ClaimExperience({
 
           <p className="mt-4 text-sm leading-7 text-ink-soft">
             {checkoutMode === "demo"
-              ? "Oeffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und gehe danach direkt in die Demo-Zahlungsmaske."
-              : "Oeffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und wechsle danach direkt in den sicheren Checkout."}
+              ? "Öffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und gehe danach direkt in die Demo-Zahlungsmaske."
+              : "Öffne dein Bild auf dem Handy, gib kurz deinen Namen und deine E-Mail an und wechsle danach direkt in den sicheren Checkout."}
           </p>
 
           {!showForm ? (
@@ -257,8 +257,8 @@ export function ClaimExperience({
 
               <p className="text-xs leading-6 text-ink-soft">
                 {checkoutMode === "demo"
-                  ? "Demo-Zahlung aktiv. Die Praesentation laeuft additiv ueber die eigene Claim-Strecke und veraendert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."
-                  : "Der Checkout laeuft additiv ueber eine eigene Claim-Strecke und veraendert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."}
+                  ? "Demo-Zahlung aktiv. Die Präsentation läuft additiv über eine eigene Claim-Strecke und verändert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."
+                  : "Der Checkout läuft additiv über eine eigene Claim-Strecke und verändert keine bestehende Stripe- oder Supabase-Logik der anderen Projekte."}
               </p>
             </div>
           ) : null}

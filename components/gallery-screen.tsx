@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { ScrollingPhotoRow } from "@/components/scrolling-photo-row";
 import type { GalleryPhoto } from "@/types/photo";
@@ -37,8 +36,8 @@ export function GalleryScreen({
       ? renderStateCard(
           "Keine Bilder gefunden.",
           skippedCount > 0
-            ? `${skippedCount} Eintraege wurden geladen, hatten aber keine aufloesbare Bild-URL. Pruefe image_url, thumbnail_url oder storage_path.`
-            : "Aktuell liefert die Tabelle photos keine Bilder fuer diese Abfrage.",
+            ? `${skippedCount} Einträge wurden geladen, hatten aber keine auflösbare Bild-URL. Prüfe image_url, thumbnail_url oder storage_path.`
+            : "Aktuell liefert die Tabelle photos keine Bilder für diese Abfrage.",
         )
       : null;
 
@@ -54,7 +53,7 @@ export function GalleryScreen({
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white via-white/92 to-transparent sm:w-16" />
               <header className="px-5 pb-3 pt-4 text-center sm:px-8 sm:pb-4 sm:pt-5">
                 <h1 className="font-sans text-xl font-semibold tracking-[-0.02em] text-ink sm:text-2xl lg:text-3xl">
-                  Scanne den QR-Code und oeffne dein Bild auf dem Handy
+                  Scanne den QR-Code und öffne dein Bild auf dem Handy
                 </h1>
               </header>
               <div className="grid min-h-0 flex-1 grid-rows-2 gap-1 sm:gap-2">
@@ -82,7 +81,7 @@ export function GalleryScreen({
             </h2>
             <div className="mt-5 space-y-3 text-sm leading-7 text-ink-soft sm:text-base">
               <p>
-                Fuer den Zahlungstest nutze bitte die Demo-Karte
+                Für den Zahlungstest nutze bitte die Demo-Karte
                 <span className="font-semibold text-ink"> 4242 4242 4242 4242</span>.
               </p>
               <p>
@@ -100,14 +99,8 @@ export function GalleryScreen({
                 onClick={() => setShowIntroModal(false)}
                 className="inline-flex w-full items-center justify-center bg-ink px-5 py-4 text-sm font-semibold text-white transition hover:bg-ink/90"
               >
-                Weiter zur Demo
+                Weiter
               </button>
-              <Link
-                href="/"
-                className="inline-flex w-full items-center justify-center border border-line bg-white px-5 py-4 text-sm font-semibold text-ink transition hover:border-ink"
-              >
-                Zurueck zur Hauptseite
-              </Link>
             </div>
           </div>
         </div>

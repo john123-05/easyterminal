@@ -18,6 +18,14 @@ function buildShareText() {
   return "Ich habe gerade mein Bild gesichert.";
 }
 
+function canShareFiles(file: File) {
+  return Boolean(
+    "canShare" in navigator &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [file] }),
+  );
+}
+
 function buildOrderUrl(props: ClaimSuccessExperienceProps) {
   if (props.sessionId) {
     return `/api/claim/order?session_id=${encodeURIComponent(props.sessionId)}`;
@@ -163,7 +171,18 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      const { blob, fileName } = await loadDownloadAsset();
+      const { blob, file, fileName } = await loadDownloadAsset();
+
+      if (canShareFiles(file)) {
+        await navigator.share({
+          title: "Bild speichern",
+          text: "Du kannst das Bild jetzt teilen oder in Fotos sichern.",
+          files: [file],
+        });
+        setDownloadMessage("Teilen oder in Fotos sichern geöffnet.");
+        return;
+      }
+
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       const supportsDownloadAttribute = typeof link.download === "string";
@@ -178,7 +197,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
 
       if (!supportsDownloadAttribute) {
         window.open(objectUrl, "_blank", "noopener,noreferrer");
-        setDownloadMessage("Bild im neuen Tab geoeffnet.");
+        setDownloadMessage("Bild im neuen Tab geöffnet.");
       } else {
         setDownloadMessage("Download gestartet.");
       }
@@ -232,7 +251,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         return;
       }
 
-      setShareMessage("Teilen ist auf diesem Geraet gerade nicht verfuegbar.");
+      setShareMessage("Teilen ist auf diesem Gerät gerade nicht verfügbar.");
     } catch (error) {
       setShareMessage(
         error instanceof Error ? error.message : "Teilen wurde abgebrochen.",
@@ -248,7 +267,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
           <div className="w-full border border-line bg-white p-6 sm:p-7">
             <h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink">
-              Zahlung ist durch, aber die Freischaltung fehlt noch.
+              Die Zahlung ist durch, aber die Freischaltung fehlt noch.
             </h1>
             <p className="mt-4 text-sm leading-7 text-ink-soft">{state.message}</p>
           </div>
@@ -279,11 +298,11 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
         <section className="mt-5 border border-line bg-white p-5 sm:p-6">
           <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Checkout</p>
           <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-            {isPaid ? "Dein Bild ist jetzt verfuegbar." : "Freischaltung wird geprueft."}
+            {isPaid ? "Dein Bild ist jetzt verfügbar." : "Freischaltung wird geprüft."}
           </h1>
           <p className="mt-4 text-sm leading-7 text-ink-soft">
             {isPaid
-              ? "Du kannst dein Bild jetzt herunterladen oder das Foto direkt mit Freunden teilen."
+              ? "Du kannst dein Bild jetzt speichern oder direkt mit Freunden teilen."
               : "Die Zahlung wird verarbeitet. Wir schalten dein Bild direkt danach frei."}
           </p>
 
@@ -300,7 +319,7 @@ export function ClaimSuccessExperience(props: ClaimSuccessExperienceProps) {
                   : "pointer-events-none border border-line bg-page text-ink-soft"
               }`}
             >
-              {isDownloading ? "Download wird vorbereitet..." : "Bild herunterladen"}
+              {isDownloading ? "Speichern wird vorbereitet..." : "Bild speichern"}
             </button>
 
             <button

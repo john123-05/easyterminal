@@ -72,7 +72,7 @@ export function DemoCheckoutExperience({
       !formState.expiry.trim() ||
       !formState.cvc.trim()
     ) {
-      setSubmitError("Bitte fuelle alle Kartenfelder fuer die Demo aus.");
+      setSubmitError("Bitte fülle alle Kartenfelder für die Demo aus.");
       return;
     }
 
@@ -101,7 +101,7 @@ export function DemoCheckoutExperience({
 
             <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-3">
               <div className="border border-white/80 bg-white/85 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft backdrop-blur">
-                Demo Checkout
+                Demo-Checkout
               </div>
               <div className="border border-white/80 bg-white/85 px-3 py-2 text-sm font-semibold text-ink backdrop-blur">
                 {priceLabel}
@@ -123,7 +123,7 @@ export function DemoCheckoutExperience({
             <div>
               <p className="text-[11px] uppercase tracking-[0.28em] text-accent">Zahlung</p>
               <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink">
-                Demo-Kauf abschliessen.
+                Demo-Kauf abschließen.
               </h1>
             </div>
 
@@ -133,7 +133,7 @@ export function DemoCheckoutExperience({
           </div>
 
           <p className="mt-4 text-sm leading-7 text-ink-soft">
-            Diese Zahlungsmaske ist nur fuer die Vorfuehrung. Beliebige Kartendaten funktionieren,
+            Diese Zahlungsmaske ist nur für die Vorführung. Beliebige Kartendaten funktionieren,
             es wird nichts belastet und das Bild wird danach direkt freigeschaltet.
           </p>
 
@@ -220,7 +220,7 @@ export function DemoCheckoutExperience({
             </div>
 
             <div className="border border-line bg-page px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">Claim Code</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-ink-soft">Claim-Code</p>
               <p className="mt-2 break-all text-sm font-medium text-ink">{claimCode}</p>
             </div>
 
@@ -240,7 +240,7 @@ export function DemoCheckoutExperience({
             </button>
 
             <p className="text-xs leading-6 text-ink-soft">
-              Demo-Modus aktiv. Jede eingegebene Karte fuehrt direkt zur Freischaltung des Bildes.
+              Demo-Modus aktiv. Jede eingegebene Karte führt direkt zur Freischaltung des Bildes.
             </p>
           </div>
 

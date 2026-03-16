@@ -11,6 +11,14 @@ function buildShareText() {
   return "Ich habe gerade mein Bild gesichert.";
 }
 
+function canShareFiles(file: File) {
+  return Boolean(
+    "canShare" in navigator &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [file] }),
+  );
+}
+
 export function DemoSuccessExperience({
   photoUrl,
   claimCode,
@@ -21,19 +29,38 @@ export function DemoSuccessExperience({
   const [isSharing, setIsSharing] = useState(false);
 
   const shareUrl = useMemo(() => photoUrl, [photoUrl]);
+  const downloadUrl = useMemo(
+    () => `/api/claim/demo-download?code=${encodeURIComponent(claimCode)}`,
+    [claimCode],
+  );
 
   async function loadDownloadAsset() {
-    const response = await fetch(photoUrl, {
+    const response = await fetch(downloadUrl, {
       cache: "no-store",
     });
 
+    let serverError: string | null = null;
+
     if (!response.ok) {
-      throw new Error("Das Bild konnte nicht geladen werden.");
+      const contentType = response.headers.get("content-type") ?? "";
+
+      if (contentType.includes("application/json")) {
+        const payload = (await response.json()) as { error?: string };
+        serverError = payload.error ?? null;
+      }
+
+      throw new Error(serverError || "Das Bild konnte nicht geladen werden.");
     }
 
     const blob = await response.blob();
     const contentType = response.headers.get("content-type") ?? blob.type ?? "image/jpeg";
-    const fileName = `${claimCode || "liftpictures-demo"}.jpg`;
+    const disposition = response.headers.get("content-disposition") ?? "";
+    const fileNameMatch =
+      disposition.match(/filename\*=UTF-8''([^;]+)/i) ??
+      disposition.match(/filename=\"?([^\";]+)\"?/i);
+    const fileName = fileNameMatch?.[1]
+      ? decodeURIComponent(fileNameMatch[1])
+      : `${claimCode || "liftpictures-demo"}.jpg`;
     const file = new File([blob], fileName, {
       type: contentType,
     });
@@ -50,7 +77,18 @@ export function DemoSuccessExperience({
       setIsDownloading(true);
       setDownloadMessage(null);
 
-      const { blob, fileName } = await loadDownloadAsset();
+      const { blob, file, fileName } = await loadDownloadAsset();
+
+      if (canShareFiles(file)) {
+        await navigator.share({
+          title: "Bild speichern",
+          text: "Du kannst das Bild jetzt teilen oder in Fotos sichern.",
+          files: [file],
+        });
+        setDownloadMessage("Teilen oder in Fotos sichern geöffnet.");
+        return;
+      }
+
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       const supportsDownloadAttribute = typeof link.download === "string";
@@ -65,7 +103,7 @@ export function DemoSuccessExperience({
 
       if (!supportsDownloadAttribute) {
         window.open(objectUrl, "_blank", "noopener,noreferrer");
-        setDownloadMessage("Bild im neuen Tab geoeffnet.");
+        setDownloadMessage("Bild im neuen Tab geöffnet.");
       } else {
         setDownloadMessage("Download gestartet.");
       }
@@ -119,7 +157,7 @@ export function DemoSuccessExperience({
         return;
       }
 
-      setShareMessage("Teilen ist auf diesem Geraet gerade nicht verfuegbar.");
+      setShareMessage("Teilen ist auf diesem Gerät gerade nicht verfügbar.");
     } catch (error) {
       setShareMessage(
         error instanceof Error ? error.message : "Teilen wurde abgebrochen.",
@@ -148,8 +186,7 @@ export function DemoSuccessExperience({
             Dein Bild ist jetzt freigeschaltet.
           </h1>
           <p className="mt-4 text-sm leading-7 text-ink-soft">
-            Die Demo-Zahlung war erfolgreich. Du kannst das Bild jetzt herunterladen oder direkt
-            teilen.
+            Die Demo-Zahlung war erfolgreich. Du kannst das Bild jetzt speichern oder direkt teilen.
           </p>
 
           <div className="mt-6 border border-line bg-page px-4 py-4">
@@ -166,7 +203,7 @@ export function DemoSuccessExperience({
               disabled={isDownloading}
               className="inline-flex w-full items-center justify-center bg-ink px-5 py-4 text-sm font-semibold text-white transition hover:bg-ink/90"
             >
-              {isDownloading ? "Download wird vorbereitet..." : "Bild herunterladen"}
+              {isDownloading ? "Speichern wird vorbereitet..." : "Bild speichern"}
             </button>
 
             <button
